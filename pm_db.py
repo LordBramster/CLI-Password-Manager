@@ -490,64 +490,70 @@ def editProfileData(hashed_pass, db):
 
 def readAllProfiles(hashed_pass, db):
     displayHeader("READING ALL PROFILES")
-    try:
-        i = 0
-        domains = list(db.keys())
+    hide = True
+    input_hide_pwd = timeoutInput("Type (.unlock) to unhide passwords from view."
+                                  "\nPress enter to continue, or type (.c) to cancel: ")
+    hide = False if input_hide_pwd == ".unlock" else True
+    if input_hide_pwd != ".c" and input_hide_pwd != timeoutGlobalCode:
+        try:
+            i = 0
+            domains = list(db.keys())
 
-        profile_data = []
-        profile_data_headers = ['PROFILE', 'DOMAIN', 'USERNAME', 'PASSWORD']
-        # print(f'PROFILE\t\tDOMAIN\t\t\tUSERNAME\t\tPASSWORD')
+            profile_data = []
+            profile_data_headers = ['PROFILE', 'DOMAIN', 'USERNAME', 'PASSWORD']
+            # print(f'PROFILE\t\tDOMAIN\t\t\tUSERNAME\t\tPASSWORD')
 
-        for e in db:
-            i = i + 1
-            username = str(
-                decrypt_data(
-                    bytes(db[e]["username"], encoding="utf-8"), hashed_pass
-                ).decode("utf-8")
-            )
-            password = str(
-                decrypt_data(
-                    bytes(db[e]["password"], encoding="utf-8"), hashed_pass
-                ).decode("utf-8")
-            )
-            # print("PROFILE " + str(i) + ": " + e)
-            # print("Username: " + username)
-            # print(f"{i}\t\t{e}\t\t{username}\t\t{'*' * len(password)}")
-            profile_data.append([str(i), str(e), str(username), str('*' * len(password))])
-            del e
-            del username
-            del password
-            # print(divider)
+            for e in db:
+                i = i + 1
+                username = str(
+                    decrypt_data(
+                        bytes(db[e]["username"], encoding="utf-8"), hashed_pass
+                    ).decode("utf-8")
+                )
+                password = str(
+                    decrypt_data(
+                        bytes(db[e]["password"], encoding="utf-8"), hashed_pass
+                    ).decode("utf-8")
+                )
+                # print("PROFILE " + str(i) + ": " + e)
+                # print("Username: " + username)
+                # print(f"{i}\t\t{e}\t\t{username}\t\t{'*' * len(password)}")
+                hidden_pwd = '*' * len(password)
+                profile_data.append([str(i), str(e), str(username), str(hidden_pwd if hide else password)])
+                del e
+                del username
+                del password
+                # print(divider)
 
-        profile_table = columnar(profile_data, headers=profile_data_headers, no_borders=True)
-        print(profile_table)
+            profile_table = columnar(profile_data, headers=profile_data_headers, no_borders=True)
+            print(profile_table)
 
-        if i == 0:
-            print("No saved profiles")
-        if i > 0:
-            userContinue = timeoutInput(
-                "\nSelect the password to be copied to your clipboard (ex: 1), or type (.c) to cancel: ")
-            if userContinue.isdigit() == True:
-                if int(userContinue) > 0:
-                    try:
-                        password = str(
-                            decrypt_data(
-                                bytes(db[str(domains[int(userContinue) - 1])]["password"], encoding="utf-8"),
-                                hashed_pass,
-                            ).decode("utf-8")
-                        )
-                        print("\n" + to_clipboard(password))
-                        del password
-                    except:
-                        print("\nUnable to find profile corresponding to " + str(userContinue) + ".")
-                else:
-                    print("\nThere are no profiles corresponding to that number.")
-            if userContinue.isdigit() == False and userContinue != timeoutGlobalCode:
-                return False
-            if userContinue == timeoutGlobalCode:
-                return True
-    except:
-        print("Could not load all profiles")
+            if i == 0:
+                print("No saved profiles")
+            if i > 0:
+                userContinue = timeoutInput(
+                    "\nSelect the password to be copied to your clipboard (ex: 1), or type (.c) to cancel: ")
+                if userContinue.isdigit() == True:
+                    if int(userContinue) > 0:
+                        try:
+                            password = str(
+                                decrypt_data(
+                                    bytes(db[str(domains[int(userContinue) - 1])]["password"], encoding="utf-8"),
+                                    hashed_pass,
+                                ).decode("utf-8")
+                            )
+                            print("\n" + to_clipboard(password))
+                            del password
+                        except:
+                            print("\nUnable to find profile corresponding to " + str(userContinue) + ".")
+                    else:
+                        print("\nThere are no profiles corresponding to that number.")
+                if userContinue.isdigit() == False and userContinue != timeoutGlobalCode:
+                    return False
+                if userContinue == timeoutGlobalCode:
+                    return True
+        except:
+            print("Could not load all profiles")
     userContinue = timeoutInput("\nPress enter to return to menu...")
     if userContinue != timeoutGlobalCode:
         print("Returning to menu")
@@ -644,7 +650,7 @@ def displayHeader(title):
     print(str(title) + "\n")
 
 
-def displayTableDB(hashed_pass, db):
+def displayTableDB(hashed_pass, db, hide=True):
     i = 0
     domains = list(db.keys())
     profile_data = []
@@ -661,7 +667,8 @@ def displayTableDB(hashed_pass, db):
                 bytes(db[e]["password"], encoding="utf-8"), hashed_pass
             ).decode("utf-8")
         )
-        profile_data.append([str(i), str(e), str(username), str('*' * len(password))])
+        hidden_pwd = '*' * len(password)
+        profile_data.append([str(i), str(e), str(username), str(hidden_pwd if hide else password)])
         del e
         del username
         del password
