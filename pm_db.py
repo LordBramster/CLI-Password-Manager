@@ -15,7 +15,7 @@ from inputimeout import inputimeout, TimeoutOccurred
 import keyboard as kb
 import sys
 from god_key_hasher import *
-
+from columnar import columnar
 
 divider = "-----------------------------------------------------------------------------------------------------------------------\n"
 lockImg = """                               
@@ -77,6 +77,7 @@ vaultImg = """
 # Global Variables
 timeoutGlobalCode = "*TIMEOUT*"
 
+
 def main():
     # RUN PROGRAM
     # Check if vault exists
@@ -88,7 +89,6 @@ def main():
         print(vaultImg)
         print("\nVAULT SETUP\n\nCould not find pm_db.mmf in local directory, continuing to vault setup.")
         print(vaultSetup())
-
 
     # RUN LOGIN
     os.system("cls" if os.name == "nt" else "clear")
@@ -117,11 +117,12 @@ def main_pwd_manager(hashed_pass, contents):
     timedOut = False
     while not timedOut:
         os.system("cls" if os.name == "nt" else "clear")
-        print(checkImg)
+        # print(checkImg)
+        print(vaultImg)
         print(divider)
-        user_cmd = print(
-            "\n(a)dd profile | (f)ind profile data  | (e)dit profile data | (r)ead all profiles | (d)elete profile data\n(g)enerate password | (c)hange master password | e(x)it\n"
-        )
+        user_cmd = print("\n(a)dd profile | (f)ind profile data  | (e)dit profile data | (r)ead all profiles |"
+                         " (d)elete profile data\n"
+                         "(g)enerate password | (c)hange master password | (j)son import profiles | e(x)it\n")
         user_cmd = timeoutInput("What would you like to do? ")
         print("\n")
 
@@ -152,10 +153,13 @@ def main_pwd_manager(hashed_pass, contents):
         # GENERATE PASSWORD
         if user_cmd == "g":
             timedOut = pwdGenerate(hashed_pass, db)
-        
+
         # CHANGE MASTER PASSWORD
         if user_cmd == "c":
             timedOut = changeMasterPassword(hashed_pass, db)
+
+        if user_cmd == 'j':
+            timedOut = importProfiles(hashed_pass, db)
 
         # EXIT PROGRAM AND RETURN TO TERMINAL
         if user_cmd == "x":
@@ -166,17 +170,18 @@ def main_pwd_manager(hashed_pass, contents):
         if user_cmd == timeoutGlobalCode:
             timeoutCleanup()
             timedOut = True
-            
+
     # CLEANUP SENSITIVE INFO ON TIMEOUT
     del hashed_pass
     del contents
     del db
-    
-    
+
+
 def changeMasterPassword(hashed_pass, db):
     # CHANGE MASTER PASSWORD
     displayHeader("CHANGE MASTER PASSWORD")
-    password_provided = timeoutInput("What would you like your master password to be (type and submit (.c) to cancel)? ")
+    password_provided = timeoutInput(
+        "What would you like your master password to be (type and submit (.c) to cancel)? ")
     if password_provided != ".c" and password_provided != "" and password_provided != " " and password_provided != timeoutGlobalCode:
         password = password_provided.encode()  # Convert to type bytes
         salt = os.urandom(random.randint(16, 256))
@@ -203,7 +208,7 @@ def changeMasterPassword(hashed_pass, db):
 
                 password = str(
                     decrypt_data(
-                        bytes(db[domains[i]][ "password"], encoding="utf-8"),
+                        bytes(db[domains[i]]["password"], encoding="utf-8"),
                         hashed_pass,
                     ).decode("utf-8")
                 )
@@ -227,7 +232,7 @@ def changeMasterPassword(hashed_pass, db):
             file = open("VERIFIER.txt", "wb")
             file.write(encrypt_data("entered_master_correct", hashed_entered_pass))
             file.close()
-            
+
             # finally overwrite the database file with everything encrypted with the new password
             overwrite_db(encrypt_data(json.dumps(db), hashed_entered_pass).decode("utf-8"))
             del hashed_entered_pass
@@ -252,24 +257,27 @@ def changeMasterPassword(hashed_pass, db):
                 return True
         else:
             return True
-    
+
 
 def addProfile(hashed_pass, db):
     # ADD PROFILE
     displayHeader("ADD A PROFILE")
     print("Type and submit (.c) to cancel.")
     add_domain = timeoutInput("Website domain name: ")
+    add_user = None
+    add_password = None
+
     if add_domain != ".c" and add_domain != timeoutGlobalCode:
         add_user = timeoutInput("Username: ")
-    if add_user != ".c" and add_user != timeoutGlobalCode: 
-        add_password = timeoutInput("Password: ")
-    if add_domain != ".c" and add_domain != timeoutGlobalCode and add_user != timeoutGlobalCode and add_password != timeoutGlobalCode:
-        db[add_domain] = {
-            "username": str(encrypt_data(add_user, hashed_pass).decode("utf-8")),
-            "password": str(encrypt_data(add_password, hashed_pass).decode("utf-8")),
-        }
-        overwrite_db(encrypt_data(json.dumps(db), hashed_pass).decode("utf-8"))
-        print("Created " + add_domain + " profile successfully!")
+        if add_user != ".c" and add_user != timeoutGlobalCode:
+            add_password = timeoutInput("Password: ")
+            if add_domain != ".c" and add_domain != timeoutGlobalCode and add_user != timeoutGlobalCode and add_password != timeoutGlobalCode:
+                db[add_domain] = {
+                    "username": str(encrypt_data(add_user, hashed_pass).decode("utf-8")),
+                    "password": str(encrypt_data(add_password, hashed_pass).decode("utf-8")),
+                }
+                overwrite_db(encrypt_data(json.dumps(db), hashed_pass).decode("utf-8"))
+                print("Created " + add_domain + " profile successfully!")
     if add_domain == ".c":
         print("Operation canceled.")
         return False
@@ -277,8 +285,81 @@ def addProfile(hashed_pass, db):
         return True
 
 
+def importProfiles(hashed_pass, db):
+    # IMPORT PROFILES
+    import_count = 0
+    import_total = 0
+
+    displayHeader("IMPORT PROFILES FROM .JSON")
+    print("Type and submit (.c) to cancel.")
+    import_db_path = timeoutInput("Filename of .JSON (must be in DB directory): ")
+    if import_db_path != ".c" and import_db_path != timeoutGlobalCode:
+
+        try:
+            jdb = json.load(open(import_db_path))
+            print("Found " + import_db_path + " successfully!")
+            import_total = len(jdb.keys())
+
+            for jdomain in jdb.keys():
+                if jdomain not in db.keys():
+                    db[jdomain] = {
+                        "username": str(encrypt_data(jdb[jdomain]["username"], hashed_pass).decode("utf-8")),
+                        "password": str(encrypt_data(jdb[jdomain]["password"], hashed_pass).decode("utf-8")),
+                    }
+                    overwrite_db(encrypt_data(json.dumps(db), hashed_pass).decode("utf-8"))
+                    print("Imported " + jdomain + " profile successfully!\n")
+                    import_count += 1
+                else:
+                    overwrite_domain = timeoutInput(f"{jdomain} already exists. Would you like to overwrite it? "
+                                                    f"(Y)es or (N)o, or type (.c) to cancel: ")
+                    if overwrite_domain != ".c" and overwrite_domain != timeoutGlobalCode and overwrite_domain.upper() == "Y":
+                        db[jdomain] = {
+                            "username": str(encrypt_data(jdb[jdomain]["username"], hashed_pass).decode("utf-8")),
+                            "password": str(encrypt_data(jdb[jdomain]["password"], hashed_pass).decode("utf-8")),
+                        }
+                        overwrite_db(encrypt_data(json.dumps(db), hashed_pass).decode("utf-8"))
+                        print("Overwritten " + jdomain + " profile successfully!")
+                        import_count += 1
+
+                    elif overwrite_domain.upper() == "N":
+                        print("Did not overwrite " + jdomain + " profile.")
+                    else:
+                        print("Operation canceled.")
+                        userContinue = timeoutInput("\nPress enter to return to menu...")
+                        if userContinue != timeoutGlobalCode:
+                            print("Returning to menu")
+                            return False
+                        else:
+                            return True
+
+            print(f"\nAdded {import_count}/{import_total} profiles from {import_db_path}.")
+            userContinue = timeoutInput("\nPress enter to return to menu...")
+            if userContinue != timeoutGlobalCode:
+                print("Returning to menu")
+                return False
+            else:
+                return True
+
+        except:
+            print("Error finding .JSON file.")
+            print(f"\nAdded {import_count}/{import_total} profiles from {import_db_path}.")
+            userContinue = timeoutInput("\nPress enter to return to menu...")
+            if userContinue != timeoutGlobalCode:
+                print("Returning to menu")
+                return False
+            else:
+                return True
+    if import_db_path == ".c":
+        print("Operation canceled. No profiles were added.")
+        time.sleep(1)
+        return False
+    if import_db_path == timeoutGlobalCode:
+        return True
+
+
 def findProfileData(hashed_pass, db):
     displayHeader("FIND A PROFILE")
+    displayTableDB(hashed_pass, db)
     print("Type and submit (.c) to cancel.")
     read_domain = timeoutInput("What's the domain you're looking for? ")
     if read_domain != ".c" and read_domain != timeoutGlobalCode:
@@ -302,7 +383,9 @@ def findProfileData(hashed_pass, db):
                     del domain_info
                     del username
                     i = i + 1
-                userContinue = timeoutInput("\nSelect the password to be copied to your clipboard (ex: 1), or type (.c) to cancel: ")
+                userContinue = timeoutInput(
+                    "\nSelect the profile, for its password to be copied to your clipboard (ex: 1), "
+                    "or type (.c) to cancel: ")
                 if userContinue.isdigit() == True:
                     if int(userContinue) > 0:
                         try:
@@ -342,6 +425,7 @@ def findProfileData(hashed_pass, db):
 
 def editProfileData(hashed_pass, db):
     displayHeader("EDIT A PROFILE")
+    displayTableDB(hashed_pass, db)
     edit_domain = timeoutInput("Website domain name (submit (.c) to cancel): ")
     if edit_domain != ".c" and edit_domain != timeoutGlobalCode:
         try:
@@ -409,6 +493,11 @@ def readAllProfiles(hashed_pass, db):
     try:
         i = 0
         domains = list(db.keys())
+
+        profile_data = []
+        profile_data_headers = ['PROFILE', 'DOMAIN', 'USERNAME', 'PASSWORD']
+        # print(f'PROFILE\t\tDOMAIN\t\t\tUSERNAME\t\tPASSWORD')
+
         for e in db:
             i = i + 1
             username = str(
@@ -416,15 +505,28 @@ def readAllProfiles(hashed_pass, db):
                     bytes(db[e]["username"], encoding="utf-8"), hashed_pass
                 ).decode("utf-8")
             )
-            print("PROFILE " + str(i) + ": " + e)
-            print("Username: " + username)
+            password = str(
+                decrypt_data(
+                    bytes(db[e]["password"], encoding="utf-8"), hashed_pass
+                ).decode("utf-8")
+            )
+            # print("PROFILE " + str(i) + ": " + e)
+            # print("Username: " + username)
+            # print(f"{i}\t\t{e}\t\t{username}\t\t{'*' * len(password)}")
+            profile_data.append([str(i), str(e), str(username), str('*' * len(password))])
             del e
             del username
-            print(divider)
+            del password
+            # print(divider)
+
+        profile_table = columnar(profile_data, headers=profile_data_headers, no_borders=True)
+        print(profile_table)
+
         if i == 0:
             print("No saved profiles")
         if i > 0:
-            userContinue = timeoutInput("\nSelect the password to be copied to your clipboard (ex: 1), or type (.c) to cancel: ")
+            userContinue = timeoutInput(
+                "\nSelect the password to be copied to your clipboard (ex: 1), or type (.c) to cancel: ")
             if userContinue.isdigit() == True:
                 if int(userContinue) > 0:
                     try:
@@ -443,7 +545,7 @@ def readAllProfiles(hashed_pass, db):
             if userContinue.isdigit() == False and userContinue != timeoutGlobalCode:
                 return False
             if userContinue == timeoutGlobalCode:
-                return True            
+                return True
     except:
         print("Could not load all profiles")
     userContinue = timeoutInput("\nPress enter to return to menu...")
@@ -456,6 +558,7 @@ def readAllProfiles(hashed_pass, db):
 
 def deleteProfileData(hashed_pass, db):
     displayHeader("DELETE A PROFILE")
+    displayTableDB(hashed_pass, db)
     del_domain = timeoutInput("Write the exact saved domain name (type (.c) to cancel): ")
     if del_domain != ".c" and del_domain != timeoutGlobalCode:
         try:
@@ -541,10 +644,36 @@ def displayHeader(title):
     print(str(title) + "\n")
 
 
+def displayTableDB(hashed_pass, db):
+    i = 0
+    domains = list(db.keys())
+    profile_data = []
+    profile_data_headers = ['PROFILE', 'DOMAIN', 'USERNAME', 'PASSWORD']
+    for e in db:
+        i = i + 1
+        username = str(
+            decrypt_data(
+                bytes(db[e]["username"], encoding="utf-8"), hashed_pass
+            ).decode("utf-8")
+        )
+        password = str(
+            decrypt_data(
+                bytes(db[e]["password"], encoding="utf-8"), hashed_pass
+            ).decode("utf-8")
+        )
+        profile_data.append([str(i), str(e), str(username), str('*' * len(password))])
+        del e
+        del username
+        del password
+
+    profile_table = columnar(profile_data, headers=profile_data_headers, no_borders=True)
+    print(profile_table)
+
+
 # Clear clipboard after 30 seconds
 def clear_clipboard_timer():
     kb.wait('ctrl+v')
-    time.sleep(0.1) # Without sleep, clipboard will automatically clear before user actually pastes content
+    time.sleep(0.1)  # Without sleep, clipboard will automatically clear before user actually pastes content
     pyperclip.copy("")
 
 
@@ -562,7 +691,7 @@ def timeoutCleanup():
     print(lockImg)
     print(
         "\n\nYour session expired. For your security, the program has automatically exited. All submitted data is still saved."
-    ) 
+    )
     sys.exit
 
 
@@ -572,7 +701,7 @@ def timeoutInput(caption):
     except TimeoutOccurred:
         user_input = timeoutGlobalCode
         timeoutCleanup()
-    return(user_input)
+    return (user_input)
 
 
 # CRYPTOGRAPHY FUNCTIONS
@@ -620,7 +749,7 @@ def verify_password(password_provided, cSALT, cVERIFIER):
     kdf = Scrypt(
         salt=salt,
         length=32,
-        n=2**14,
+        n=2 ** 14,
         r=8,
         p=1,
     )
