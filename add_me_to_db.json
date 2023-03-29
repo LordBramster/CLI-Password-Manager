@@ -1,14 +1,14 @@
 {
-  "something.com": {
+  "test1.com": {
     "username": "abc",
-    "password": "321"
+    "password": "123"
   },
-  "stuff.com": {
+  "test2.com": {
     "username": "xyz",
     "password": "789"
   },
-  "test.com": {
-    "username": "cbz",
-    "password": "456"
+  "test3.com": {
+    "username": "cba",
+    "password": "321"
   }
 }
