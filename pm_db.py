@@ -525,7 +525,9 @@ def readAllProfiles(hashed_pass, db):
                 del password
                 # print(divider)
 
-            profile_table = columnar(profile_data, headers=profile_data_headers, no_borders=True)
+            profile_data_sorted = sorted(profile_data, key=lambda x: x[1])  # x[2]
+            # profile_table = columnar(profile_data, headers=profile_data_headers, no_borders=True)
+            profile_table = columnar(profile_data_sorted, headers=profile_data_headers, no_borders=True)
             print(profile_table)
 
             if i == 0:
