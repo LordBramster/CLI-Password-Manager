@@ -1,0 +1,14 @@
+{
+  "test1.com": {
+    "username": "abc",
+    "password": "123"
+  },
+  "test2.com": {
+    "username": "xyz",
+    "password": "789"
+  },
+  "test3.com": {
+    "username": "cba",
+    "password": "321"
+  }
+}
