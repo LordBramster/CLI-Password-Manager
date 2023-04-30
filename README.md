@@ -1,45 +1,15 @@
-![DIY Password Manager Screenshot](banner.png)
+![DIY Password Manager Screenshot](menu_banner.png)
 
 # Password Manager
-I built this to strengthen my cryptography skills and knowledge of data types in Python. This Password Manager doesn't keep your master password. Instead, valid passwords are determined if it decrypts a known string correctly. Typically, the salt and verifier hashes would be kept in a secure database. However, for educational purposes, I've kept them in text files. 
+This project was originally forked from [MarkMcKinney/DIY-Password-Manager](https://github.com/MarkMcKinney/DIY-Password-Manager).
+I added a few features for my own person convenience.
 
-I'd love to hear from you about where I could improve it! You can also follow me on [Twitter](https://twitter.com/MarkDMcKinney) to keep updated on this project's (and other projects') progress.
+## Fork Additions:
+- **Changed menu icon(s).**
+- **Included `.bat` file for desktop shortcut (`.exe` as a later feature).**
+- **Import profiles/credentials in bulk via any `.json` file** *(Note: `test_add_to_db.json` is included with the source, and can be used as a template)*.![JSON Import](menu_json.png)
+- **Display Table of all available profiles/passwords with each context menu items:** ![Display Table](menu_hidden.png)
+- **Hide/Show Display Table to protect sensitive profile and credential information:** ![Display Hidden](menu_unlock.png)
 
-**EDIT (8/10/2021):** After posting this on [r/Python](https://www.reddit.com/r/Python/comments/p22p35/i_made_a_password_manager_for_the_terminal_let_me/), one Redditor asked what my threat model was. Initially, I had no idea what they were referring to, but after some research, I think this was the mental version I had of a threat model. I wanted to accomplish two things:
-
-1. Make sure that all logins were encrypted, but editable.
-2. That the master key wasn’t stored in any form.
-
-This was done by encrypting JSON that contained logins, having all hashes and salts created with as much randomness as possible, and having an encrypted verifier string that the program knew what the decrypted version was.
-
-## Instructions
-Just run the pm_db.py file. If you would like to setup a new vault, delete the pm_db.mmf file. Then, reopen pm_db.py and it will automatically walk you through the setup steps.
-
-## Demo
-You can run the demo by opening the pm_db.py file and using **thisisatest!** as the password.
-
-## TODO
-- ~~**Password generator**~~: You can now generate truely random and secure passwords of a desired length.
-- ~~**Better search**~~: Find profile without knowing the website url exactly. Debating if the delete feature should have this function?
-- ~~**Data scrubbing**~~: Your activity won't be logged in terminal output.
-- ~~**Timeout after 90 seconds idle**~~
-- ~~**Fix entering blank input causes timeout**~~ Now available **across platforms**.
-- ~~**Fix backspacing**~~: If you make a mistake, you have to go through the process again. Not terrible, but inconvienient.
-- ~~**Auto Copy & Paster Logins**~~: Function for user to export username/password to clipboard
-- **Turn into CLI tool?**
-- **Make it look sexy**: Taking a look at adding this: https://github.com/willmcgugan/rich
-- ~~**Keep command input lowercased**~~
-- **Use Argon2 for hashing**: Uses Scrypt right now.
-- ~~**Added requirements.txt**~~
-- ~~**Clear clipboard after pasting**~~
-- **Create timeout function for password entry**
-
-## Shoutouts
-- @aarana14 for doing some major cleanup and formatting of the main code. Much simpler to add future features and debug now!
-- @Kleysley for creating Change Master Password function.
-- @deep-bhatt
-- @maxdunbar
-- @gileadecastro
-
-## Disclaimer
+## Disclaimer!
 This was built for educational purposes. This Password Manager is used at your own risk. This software is provided as is and I (including any contributors) do not take any responsibility for any damage or loss done with or by it.

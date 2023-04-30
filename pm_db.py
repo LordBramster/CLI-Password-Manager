@@ -519,6 +519,8 @@ def readAllProfiles(hashed_pass, db):
                 # print("Username: " + username)
                 # print(f"{i}\t\t{e}\t\t{username}\t\t{'*' * len(password)}")
                 hidden_pwd = '*' * len(password)
+                # hidden_profile = '*' * len(username)
+                # hidden_domain = '*' * len(e)
                 profile_data.append([str(i), str(e), str(username), str(hidden_pwd if hide else password)])
                 del e
                 del username
