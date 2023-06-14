@@ -4,7 +4,7 @@
 This project was originally forked from [MarkMcKinney/DIY-Password-Manager](https://github.com/MarkMcKinney/DIY-Password-Manager).
 I added a few features for my own personal convenience.
 
-## Fork Additions:
+## Fork Improvements:
 - **Changed menu icon(s).**
 - **Included `.bat` file for desktop shortcut (`.exe` as a later feature).**
 - **Import profiles/credentials in bulk via any `.json` file** *(Note: `test_add_to_db.json` is included with the source, and can be used as a template)*.![JSON Import](menu_json.png)
